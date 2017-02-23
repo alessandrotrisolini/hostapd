@@ -1,0 +1,10 @@
+network={
+eap=TLS
+eapol_flags=0
+key_mgmt=IEEE8021X
+identity="Example user"
+ca_cert="/usr/local/etc/raddb/certs/ca.pem"
+client_cert="/usr/local/etc/raddb/certs/user.example@example.org.pem"
+private_key="/usr/local/etc/raddb/certs/client.pem"
+private_key_passwd="whatever"
+}
