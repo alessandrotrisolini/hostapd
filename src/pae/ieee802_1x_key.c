@@ -185,5 +185,9 @@ int ieee802_1x_icv_128bits_aes_cmac(const u8 *ick, const u8 *msg,
 int ieee802_1x_sak_128bits_aes_cmac(const u8 *cak, const u8 *ctx,
 				    size_t ctx_bytes, u8 *sak)
 {
-	return aes_kdf_128(cak, "IEEE8021 SAK", ctx, ctx_bytes * 8, 128, sak);
+    int r = aes_kdf_128(cak, "IEEE8021 SAK", ctx, ctx_bytes * 8, 128, sak);
+
+    wpa_hexdump(MSG_ERROR, "SAK: ", sak, 16);
+
+	return r;
 }

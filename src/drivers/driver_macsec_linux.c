@@ -58,8 +58,7 @@ struct macsec_drv_data {
 	struct macsec_genl_ctx ctx;
 
 	int eapol_sock;
-	int use_pae_group_addr;
-	int dhcp_sock;
+	int use_pae_group_addr;	
 
 	struct netlink_data *netlink;
 	struct nl_handle *nl;
@@ -85,32 +84,12 @@ struct macsec_drv_data {
 	Boolean encoding_sa_set;
 };
 
-struct dhcp_message {
-	u_int8_t op;
-	u_int8_t htype;
-	u_int8_t hlen;
-	u_int8_t hops;
-	u_int32_t xid;
-	u_int16_t secs;
-	u_int16_t flags;
-	u_int32_t ciaddr;
-	u_int32_t yiaddr;
-	u_int32_t siaddr;
-	u_int32_t giaddr;
-	u_int8_t chaddr[16];
-	u_int8_t sname[64];
-	u_int8_t file[128];
-	u_int32_t cookie;
-	u_int8_t options[308]; /* 312 - cookie */
-};
-
 struct ieee8023_hdr {
 	u8 dest[6];
 	u8 src[6];
 	u16 ethertype;
 } STRUCT_PACKED;
 
-#ifdef __linux__
 static void handle_data(void *ctx, unsigned char *buf, size_t len)
 {
 #ifdef HOSTAPD
@@ -119,8 +98,6 @@ static void handle_data(void *ctx, unsigned char *buf, size_t len)
 	size_t left;
 	union wpa_event_data event;
 
-	/* must contain at least ieee8023_hdr 6 byte source, 6 byte dest,
-	 * 2 byte ethertype */
 	if (len < 14) {
 		wpa_printf(MSG_MSGDUMP, "handle_data: too short (%lu)",
 			   (unsigned long) len);
@@ -160,51 +137,14 @@ static void handle_read(int sock, void *eloop_ctx, void *sock_ctx)
 		wpa_printf(MSG_ERROR, "recv: %s", strerror(errno));
 		return;
 	}
-
 	handle_data(eloop_ctx, buf, len);
 }
 
 
-static void handle_dhcp(int sock, void *eloop_ctx, void *sock_ctx)
-{
-	int len;
-	unsigned char buf[3000];
-	struct dhcp_message *msg;
-	u8 *mac_address;
-	union wpa_event_data event;
-
-	len = recv(sock, buf, sizeof(buf), 0);
-	if (len < 0) {
-		wpa_printf(MSG_ERROR, "recv: %s", strerror(errno));
-		return;
-	}
-
-	/* must contain at least dhcp_message->chaddr */
-	if (len < 44) {
-		wpa_printf(MSG_MSGDUMP, "handle_dhcp: too short (%d)", len);
-		return;
-	}
-
-	msg = (struct dhcp_message *) buf;
-	mac_address = (u8 *) &(msg->chaddr);
-
-	wpa_printf(MSG_MSGDUMP, "Got DHCP broadcast packet from " MACSTR,
-		   MAC2STR(mac_address));
-
-	os_memset(&event, 0, sizeof(event));
-	event.new_sta.addr = mac_address;
-	wpa_supplicant_event(eloop_ctx, EVENT_NEW_STA, &event);
-}
-#endif /* __linux__ */
-
-
 static int macsec_drv_init_sockets(struct macsec_drv_data *drv, u8 *own_addr)
 {
-#ifdef __linux__
 	struct ifreq ifr;
 	struct sockaddr_ll addr;
-	struct sockaddr_in addr2;
-	int n = 1;
 
 	drv->common.sock = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_PAE));
 	if (drv->common.sock < 0) {
@@ -259,58 +199,8 @@ static int macsec_drv_init_sockets(struct macsec_drv_data *drv, u8 *own_addr)
 		return -1;
 	}
 	os_memcpy(own_addr, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
-
-	/* setup dhcp listen socket for sta detection */
-	if ((drv->dhcp_sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-		wpa_printf(MSG_ERROR, "socket call failed for dhcp: %s",
-			   strerror(errno));
-		return -1;
-	}
-
-	if (eloop_register_read_sock(drv->dhcp_sock, handle_dhcp, drv->common.ctx,
-				     NULL)) {
-		wpa_printf(MSG_INFO, "Could not register read socket");
-		return -1;
-	}
-
-	os_memset(&addr2, 0, sizeof(addr2));
-	addr2.sin_family = AF_INET;
-	addr2.sin_port = htons(67);
-	addr2.sin_addr.s_addr = INADDR_ANY;
-
-	if (setsockopt(drv->dhcp_sock, SOL_SOCKET, SO_REUSEADDR, (char *) &n,
-		       sizeof(n)) == -1) {
-		wpa_printf(MSG_ERROR, "setsockopt[SOL_SOCKET,SO_REUSEADDR]: %s",
-			   strerror(errno));
-		return -1;
-	}
-	if (setsockopt(drv->dhcp_sock, SOL_SOCKET, SO_BROADCAST, (char *) &n,
-		       sizeof(n)) == -1) {
-		wpa_printf(MSG_ERROR, "setsockopt[SOL_SOCKET,SO_BROADCAST]: %s",
-			   strerror(errno));
-		return -1;
-	}
-
-	os_memset(&ifr, 0, sizeof(ifr));
-	os_strlcpy(ifr.ifr_ifrn.ifrn_name, drv->common.ifname, IFNAMSIZ);
-	if (setsockopt(drv->dhcp_sock, SOL_SOCKET, SO_BINDTODEVICE,
-		       (char *) &ifr, sizeof(ifr)) < 0) {
-		wpa_printf(MSG_ERROR,
-			   "setsockopt[SOL_SOCKET,SO_BINDTODEVICE]: %s",
-			   strerror(errno));
-		return -1;
-	}
-
-	if (bind(drv->dhcp_sock, (struct sockaddr *) &addr2,
-		 sizeof(struct sockaddr)) == -1) {
-		wpa_printf(MSG_ERROR, "bind: %s", strerror(errno));
-		return -1;
-	}
-
-	return 0;
-#else /* __linux__ */
-	return -1;
-#endif /* __linux__ */
+	
+    return 0;
 }
 
 
@@ -506,6 +396,7 @@ static void * macsec_drv_wpa_init(void *ctx, const char *ifname)
 	return drv;
 }
 
+#ifndef HOSTAPD
 static void macsec_handle_eapol(int sock, void* eloop_ctx, void* sock_ctx)
 {
 	struct sockaddr_ll lladdr;
@@ -519,6 +410,7 @@ static void macsec_handle_eapol(int sock, void* eloop_ctx, void* sock_ctx)
 	wpa_printf(MSG_INFO, "EAPOL received : %d bytes\n", len);
 	return;
 }
+#endif /* HOSTAPD */
 
 static int macsec_drv_macsec_init(void *priv, struct macsec_init_params *params)
 {
@@ -548,7 +440,8 @@ static int macsec_drv_macsec_init(void *priv, struct macsec_init_params *params)
 		wpa_printf(MSG_ERROR, DRV_PREFIX "couldn't find ifindex for interface %s\n", drv->common.ifname);
 		goto cache;
 	}
-	
+
+#ifndef HOSTAPD
 	drv->eapol_sock = socket(PF_PACKET, SOCK_DGRAM, htons(ETH_P_PAE));
 	if(drv->eapol_sock < 0) {
 		wpa_printf(MSG_ERROR, DRV_PREFIX "socket EHT_P_PAE failed for interface %s\n", drv->common.ifname);
@@ -559,7 +452,7 @@ static int macsec_drv_macsec_init(void *priv, struct macsec_init_params *params)
 		wpa_printf(MSG_ERROR, "eloop register failed\n");
 		goto cache;
 	}	
-
+#endif /* HOSTAPD */
 	err = init_genl_ctx(drv);
 	if (err < 0)
 		goto cache;
@@ -1426,7 +1319,7 @@ static void * macsec_drv_hapd_init(struct hostapd_data *hapd,
 		os_free(drv);
 		return NULL;
 	}
-
+    
 	return drv;
 }
 
@@ -1438,15 +1331,9 @@ static void macsec_drv_hapd_deinit(void *priv){
 		eloop_unregister_read_sock(drv->common.sock);
 		close(drv->common.sock);
 	}
-
-	if(drv->dhcp_sock >= 0) {
-		eloop_unregister_read_sock(drv->dhcp_sock);
-		close(drv->dhcp_sock);
-	}
 	
 	os_free(drv);
 }
-
 
 
 const struct wpa_driver_ops wpa_driver_macsec_linux_ops = {
