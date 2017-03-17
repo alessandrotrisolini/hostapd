@@ -6,7 +6,7 @@ After a successful 802.1X EAP-TLS authentication, the authenticator, which is al
 The **hostapd** daemon is intended to manage an **Open vSwitch** by the addition/deletion of pysical ports to it. This enables to use a general purpose x86 machine -- with multiple NICs -- as a MACsec-capable switch.
 
 ## Installation
-
+This version of **hostapd** has been tested only on Ubuntu 16.10 LTS (Linux kernel v4.8).
 ### Dependencies
 Latest version of libnl (https://github.com/thom311/libnl/) is needed in order to communicate via netlink with the MACsec driver.
 
@@ -28,14 +28,44 @@ sudo ldconfig
 ### Compile hostapd/wpa_supplicant
 Starting from the root directory of this repository:
 
-* for hostapd:
+#### Compile hostapd:
 ```bash
 cd hostapd
 make
 ```
 
-* for wpa_supplicant:
+#### Compile wpa_supplicant:
 ```bash
 cd wpa_supplicant
 make
 ```
+
+## Usage
+### hostapd - access point
+**hostapd** has to be launched on a machine that represents the access point to a network -- in our specific case, it is a switch. **hostapd** must be able to reach a RADIUS server, in order to authenticate the supplicant and create the MACsec channel by using the cryptographic material derived from the authentication.
+
+#### Configure **hostapd**:
+**hostapd** configuration is straightforward: it needs only a configuration file with key-value pairs. A commented example can be found in the *hostapd* folder of this repository.
+
+#### Launch **hostapd**:
+Launching **hostapd** requires that the MACsec kernel module is loaded. 
+```bash
+lsmod | grep macsec
+```
+If the output is an empty string, it means that the module has to be loaded into the kernel:
+```bash
+sudo modprobe macsec
+```
+Now **hostapd** can be launched by passing as parameters a configuration file and the name of the Open vSwitch that has to be managed: 
+```bash
+sudo ./hostapd /path/to/config/file -z $ovs-bridge-name
+```
+
+### wpa_supplicant
+**wpa_supplicant** has to be launched on a node that represents an entity that wants to join a network. 
+
+#### Configure **wpa_supplicant**:
+Configuring **wpa_supplicant** is similar to configure **hostapd**: a configuration file is needed and an example can be found in the *wpa_supplicant* folder of this repository.
+
+#### Launch **wpa_supplicant**:
+TODO
