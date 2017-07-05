@@ -11,18 +11,19 @@ This version of **hostapd** has been tested only on Ubuntu 16.10 LTS (Linux kern
 Latest version of libnl (https://github.com/thom311/libnl/) is needed in order to communicate via netlink with the MACsec driver.
 
 ```bash
-git clone https://github.com/thom311/libnl/
-sudo apt-get install dh-autoreconf
+$ sudo apt-get install dh-autoreconf libssl-dev
 
-cd libnl
-./autogen.sh
-./configure --prefix=/opt/libnl --disable-static
-make
-sudo make install
+$ git clone https://github.com/thom311/libnl/
 
-cd /etc/ld.so.conf.d
-sudo echo "/opt/libnl/lib" > libnl.conf
-sudo ldconfig
+$ cd libnl
+$ ./autogen.sh
+$ ./configure --prefix=/opt/libnl --disable-static
+$ make
+$ sudo make install
+
+$ echo "/opt/libnl/lib" | sudo tee /etc/ld.so.conf.d/libnl.conf
+$ sudo ldconfig
+$ export PKG_CONFIG_PATH=/opt/libnl/lib/pkgconfig
 ```
 
 ### Compile hostapd/wpa_supplicant
@@ -30,14 +31,16 @@ Starting from the root directory of this repository:
 
 #### Compile hostapd:
 ```bash
-cd hostapd
-make
+$ cd hostapd
+$ make
+$ sudo cp hostapd /usr/local/bin/hostapd
 ```
 
 #### Compile wpa_supplicant:
 ```bash
-cd wpa_supplicant
-make
+$ cd wpa_supplicant
+$ make
+$ sudo cp wpa_supplicant /usr/local/bin/wpa_supplicant
 ```
 
 ## Usage
