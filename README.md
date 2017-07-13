@@ -11,7 +11,7 @@ This version of **hostapd** has been tested only on Ubuntu 16.10 LTS (Linux kern
 Latest version of libnl (https://github.com/thom311/libnl/) is needed in order to communicate via netlink with the MACsec driver.
 
 ```bash
-$ sudo apt-get install dh-autoreconf libssl-dev
+$ sudo apt-get install dh-autoreconf libssl-dev pkg-config bison flex
 
 $ git clone https://github.com/thom311/libnl/
 
