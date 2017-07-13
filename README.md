@@ -24,6 +24,7 @@ $ sudo make install
 $ echo "/opt/libnl/lib" | sudo tee /etc/ld.so.conf.d/libnl.conf
 $ sudo ldconfig
 $ export PKG_CONFIG_PATH=/opt/libnl/lib/pkgconfig
+$ sudo cp /usr/src/linux-headers-$(uname -r)/include/uapi/linux/if_macsec.h /usr/include/linux/if_macsec.h
 ```
 
 ### Compile hostapd/wpa_supplicant
