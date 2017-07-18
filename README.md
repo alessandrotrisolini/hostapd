@@ -46,30 +46,37 @@ $ sudo cp wpa_supplicant /usr/local/bin/wpa_supplicant
 
 ## Usage
 ### hostapd - access point
-**hostapd** has to be launched on a machine that represents the access point to a network -- in our specific case, it is a switch. **hostapd** must be able to reach a RADIUS server, in order to authenticate the supplicant and create the MACsec channel by using the cryptographic material derived from the authentication.
+**hostapd** has to be launched on a machine that represents the access point to a network -- in our specific case, it is a switch. **hostapd** must be able to reach a RADIUS server, in order to authenticate the supplicant and create the MACsec channel by using the cryptographic material derived from the authentication. 
 
 #### Configure **hostapd**:
 **hostapd** configuration is straightforward: it needs only a configuration file with key-value pairs. A commented example can be found in the *hostapd* folder of this repository.
 
 #### Launch **hostapd**:
-Launching **hostapd** requires that the MACsec kernel module is loaded. 
+Launching **hostapd** requires that the MACsec kernel module has been loaded. 
 ```bash
-lsmod | grep macsec
+$ lsmod | grep macsec
 ```
 If the output is an empty string, it means that the module has to be loaded into the kernel:
 ```bash
-sudo modprobe macsec
+$ sudo modprobe macsec
 ```
 Now **hostapd** can be launched by passing as parameters a configuration file and the name of the Open vSwitch that has to be managed: 
 ```bash
-sudo ./hostapd /path/to/config/file -z $ovs-bridge-name
+$ sudo hostapd /path/to/config/file -z $ovs-bridge-name
 ```
 
+Note that **hostapd** needs a running instance of [FreeRADIUS server](https://github.com/FreeRADIUS/freeradius-server) and to take advantage of the automatic generation of MACsec channels, EAP-TLS method must be used. FreeRADIUS also acts as DHCP server and provides some tools for the management of a Certification Authority. A guide for the installation of FreeRADIUS is available [here](https://github.com/FreeRADIUS/freeradius-server/blob/v4.0.x/INSTALL.md).
+
 ### wpa_supplicant
-**wpa_supplicant** has to be launched on a node that represents an entity that wants to join a network. 
+**wpa_supplicant** has to be launched on a node that represents an entity that wants to join a network (i.e. supplicant). 
 
 #### Configure **wpa_supplicant**:
 Configuring **wpa_supplicant** is similar to configure **hostapd**: a configuration file is needed and an example can be found in the *wpa_supplicant* folder of this repository.
 
 #### Launch **wpa_supplicant**:
-TODO
+Even **wpa_supplicant** requires that the MACsec kernel module has been loaded.
+
+Now **wpa_supplicant** can be launched by passing as paramenters the driver to be used (-D), the network interface where it has to listen (-i), and the configuration file (-c).
+```bash
+$ sudo wpa_supplicant -D macsec_linux -i interface_name -c /path/to/config/file
+```
