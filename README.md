@@ -3,7 +3,7 @@ This custom version of `hostapd` introduces the automatic establishment of *MACs
 
 After a successful 802.1X EAP-TLS authentication, the authenticator, which is also the Key Server, initiates a Key Agreement session in order to distribute the Security Association Key (SAK) that will be used to authenticate all the frames exchanged between itself and the supplicant.
 
-The `hostapd` daemon is intended to manage an [Open vSwitch](http://openvswitch.org/) by the addition/deletion of pysical ports to it. This enables to use a general purpose x86 machine -- with multiple NICs -- as a MACsec-capable switch.
+The `hostapd` daemon is intended to manage an [Open vSwitch](http://openvswitch.org/) by the addition/deletion of pysical ports to it. This enables to use a commodity machine -- with multiple NICs -- as a MACsec-capable switch.
 
 ## Installation
 This version of `hostapd` has been tested only on Ubuntu 16.10 LTS (Linux kernel v4.8).
@@ -26,6 +26,9 @@ $ sudo ldconfig
 $ export PKG_CONFIG_PATH=/opt/libnl/lib/pkgconfig
 $ sudo cp /usr/src/linux-headers-$(uname -r)/include/uapi/linux/if_macsec.h /usr/include/linux/if_macsec.h
 ```
+### Open vSwitch
+[Open vSwitch](http://openvswitch.org/) is the software switch that is used as core switching engine inside each switch machine. 
+It can be installed from the main project GitHub repository by following the installation [guide](https://github.com/openvswitch/ovs/blob/master/Documentation/intro/install/general.rst) or by using the package management system.
 
 ### Compile hostapd/wpa_supplicant
 Starting from the root directory of this repository:
@@ -65,7 +68,7 @@ Now `hostapd` can be launched by passing as parameters a configuration file and 
 $ sudo hostapd /path/to/config/file -z $ovs-bridge-name
 ```
 
-Note that `hostapd` needs a running instance of [FreeRADIUS server](https://github.com/FreeRADIUS/freeradius-server) and to take advantage of the automatic generation of MACsec channels, EAP-TLS method must be used. FreeRADIUS also acts as DHCP server and provides some tools for the management of a Certification Authority. A guide for the installation of FreeRADIUS is available [here](https://github.com/FreeRADIUS/freeradius-server/blob/v4.0.x/INSTALL.md).
+Note that `hostapd` needs a running instance of [FreeRADIUS server](https://github.com/FreeRADIUS/freeradius-server) and to take advantage of the automatic generation of MACsec channels, EAP-TLS method **must** be used. FreeRADIUS also acts as DHCP server and provides some tools for the management of a Certification Authority. A guide for the installation of FreeRADIUS is available [here](https://github.com/FreeRADIUS/freeradius-server/blob/v4.0.x/INSTALL.md).
 
 ### wpa_supplicant
 `wpa_supplicant` has to be launched on a node that represents an entity that wants to join a network (i.e. supplicant). 
