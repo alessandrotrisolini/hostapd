@@ -15,6 +15,7 @@
 #include "pae/ieee802_1x_key.h"
 #include "pae/ieee802_1x_kay.h"
 #include "pae/ieee802_1x_kay_i.h"
+#include "pae/ieee802_1x_cp.h"
 #include "wpa_supplicant_i.h"
 #include "config.h"
 #include "config_ssid.h"
@@ -344,6 +345,10 @@ void * ieee802_1x_notify_create_actor(struct wpa_supplicant *wpa_s,
      * done and a new MACsec channel has been negotiated.
      */
     if (wpa_s->kay) {
+        
+        ieee802_1x_cp_connect_unauthenticated(wpa_s->kay->cp);
+        ieee802_1x_cp_sm_step(wpa_s->kay->cp);
+
         while(!dl_list_empty(&wpa_s->kay->participant_list)) {
             participant = dl_list_entry(wpa_s->kay->participant_list.next,
                             struct ieee802_1x_mka_participant,
@@ -405,6 +410,7 @@ void * ieee802_1x_notify_create_actor(struct wpa_supplicant *wpa_s,
 	wpa_hexdump(MSG_DEBUG, "Derived CKN", ckn->name, ckn->len);
 
 	wpa_hexdump(MSG_DEBUG, "Session Id", sid, sid_len);
+
 	res = ieee802_1x_kay_create_mka(wpa_s->kay, ckn, cak, 0,
 					EAP_EXCHANGE, FALSE);
 
