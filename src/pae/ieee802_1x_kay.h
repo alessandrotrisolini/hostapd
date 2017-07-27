@@ -159,8 +159,12 @@ ieee802_1x_kay_create_mka(struct ieee802_1x_kay *kay,
 			  struct mka_key_name *ckn, struct mka_key *cak,
 			  u32 life, enum mka_created_mode mode,
 			  Boolean is_authenticator);
+void ieee802_1x_kay_delete_mka_common(struct ieee802_1x_kay *kay, 
+              struct mka_key_name *ckn);
 void ieee802_1x_kay_delete_mka(struct ieee802_1x_kay *kay,
-			       struct mka_key_name *ckn);
+			  struct mka_key_name *ckn);
+void ieee802_1x_kay_delete_mka_hotswap(struct ieee802_1x_kay *kay, 
+              struct mka_key_name *ckn);
 void ieee802_1x_kay_mka_participate(struct ieee802_1x_kay *kay,
 				    struct mka_key_name *ckn,
 				    Boolean status);
