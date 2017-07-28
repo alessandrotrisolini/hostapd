@@ -3275,6 +3275,7 @@ void wpa_supplicant_rx_eapol(void *ctx, const u8 *src_addr,
      * If MACsec is enabled, KaY has to be instantiated every time
      * an EAP Identity Request is received
      */
+/*
     if (wpa_s->key_mgmt != WPA_KEY_MGMT_NONE) {
         if (buf[4]==0x01 && buf[8]==0x01) {
             struct wpa_ssid* ssid = wpa_s->current_ssid;
@@ -3284,6 +3285,7 @@ void wpa_supplicant_rx_eapol(void *ctx, const u8 *src_addr,
             ieee802_1x_alloc_kay_sm(wpa_s, ssid);
         }
     }
+*/
 #endif /* CONFIG_MACSEC */
 
 

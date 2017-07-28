@@ -14,10 +14,13 @@
 #include "eapol_supp/eapol_supp_sm.h"
 #include "pae/ieee802_1x_key.h"
 #include "pae/ieee802_1x_kay.h"
+#include "pae/ieee802_1x_kay_i.h"
+#include "pae/ieee802_1x_cp.h"
 #include "wpa_supplicant_i.h"
 #include "config.h"
 #include "config_ssid.h"
 #include "driver_i.h"
+#include "list.h"
 #include "wpas_kay.h"
 
 
@@ -325,12 +328,41 @@ void * ieee802_1x_notify_create_actor(struct wpa_supplicant *wpa_s,
 	struct mka_key_name *ckn;
 	struct mka_key *cak;
 	struct mka_key *msk;
-	void *res = NULL;
+	struct wpa_ssid* ssid = wpa_s->current_ssid;
+    struct ieee802_1x_mka_participant *participant;
+    void *res = NULL;
 
-	if (!wpa_s->kay || wpa_s->kay->policy == DO_NOT_SECURE)
+    /**
+     * Reauthentication handling
+     *
+     * Preface: ieee802_1x_notify_create_actor function is called after a
+     * successful EAP authentication.
+     *
+     * If a KaY instance is not created, a new one is instantiated (i.e. first
+     * authN).
+     *
+     * If a KaY instance is available, it means that another EAP authN has been
+     * done and a new MACsec channel has been negotiated.
+     */
+    if (wpa_s->kay) {
+        
+        ieee802_1x_cp_connect_unauthenticated(wpa_s->kay->cp);
+        ieee802_1x_cp_sm_step(wpa_s->kay->cp);
+
+        while(!dl_list_empty(&wpa_s->kay->participant_list)) {
+            participant = dl_list_entry(wpa_s->kay->participant_list.next,
+                            struct ieee802_1x_mka_participant,
+                            list);
+            ieee802_1x_kay_delete_mka_hotswap(wpa_s->kay, &participant->ckn);
+        }
+    } else {
+        ieee802_1x_alloc_kay_sm(wpa_s, ssid);
+    }
+
+	if (wpa_s->kay->policy == DO_NOT_SECURE)
 		return NULL;
-
-	wpa_printf(MSG_DEBUG,
+	
+    wpa_printf(MSG_DEBUG,
 		   "IEEE 802.1X: External notification - Create MKA for "
 		   MACSTR, MAC2STR(peer_addr));
 
@@ -378,6 +410,7 @@ void * ieee802_1x_notify_create_actor(struct wpa_supplicant *wpa_s,
 	wpa_hexdump(MSG_DEBUG, "Derived CKN", ckn->name, ckn->len);
 
 	wpa_hexdump(MSG_DEBUG, "Session Id", sid, sid_len);
+
 	res = ieee802_1x_kay_create_mka(wpa_s->kay, ckn, cak, 0,
 					EAP_EXCHANGE, FALSE);
 

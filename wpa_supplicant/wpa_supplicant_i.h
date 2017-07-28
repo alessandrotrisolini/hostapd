@@ -488,8 +488,7 @@ struct wpa_supplicant {
 	const void *binder_object_key;
 #endif /* CONFIG_CTRL_IFACE_BINDER */
 	char bridge_ifname[16];
-
-	char ovs_port_ifname[16];
+    char ovs_port_ifname[16];
 
 	char *confname;
 	char *confanother;

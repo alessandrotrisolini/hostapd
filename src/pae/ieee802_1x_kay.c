@@ -3261,11 +3261,12 @@ ieee802_1x_kay_create_mka(struct ieee802_1x_kay *kay, struct mka_key_name *ckn,
 	dl_list_init(&participant->sak_list);
 	participant->new_key = NULL;
 	dl_list_init(&participant->rxsc_list);
-	participant->txsc = ieee802_1x_kay_init_transmit_sc(&kay->actor_sci);
-	secy_cp_control_protect_frames(kay, kay->macsec_protect);
-	secy_cp_control_replay(kay, kay->macsec_replay_protect,
+	
+    participant->txsc = ieee802_1x_kay_init_transmit_sc(&kay->actor_sci);
+    secy_cp_control_protect_frames(kay, kay->macsec_protect);
+    secy_cp_control_replay(kay, kay->macsec_replay_protect,
 			       kay->macsec_replay_window);
-	secy_create_transmit_sc(kay, participant->txsc);
+    secy_create_transmit_sc(kay, participant->txsc);
 
 	/* to derive KEK from CAK and CKN */
 	participant->kek.len = mka_alg_tbl[kay->mka_algindex].kek_len;
@@ -3325,9 +3326,6 @@ void
 ieee802_1x_kay_delete_mka(struct ieee802_1x_kay *kay, struct mka_key_name *ckn)
 {
 	struct ieee802_1x_mka_participant *participant;
-	struct ieee802_1x_kay_peer *peer;
-	struct data_key *sak;
-	struct receive_sc *rxsc;
 
 	if (!kay || !ckn)
 		return;
@@ -3336,6 +3334,67 @@ ieee802_1x_kay_delete_mka(struct ieee802_1x_kay *kay, struct mka_key_name *ckn)
 
 	/* get the participant */
 	participant = ieee802_1x_kay_get_participant(kay, ckn->name);
+	if (!participant) {
+		wpa_hexdump(MSG_DEBUG, "KaY: participant is not found",
+			    ckn->name, ckn->len);
+		return;
+	}
+
+    ieee802_1x_kay_delete_mka_common(kay, ckn);
+
+	secy_delete_transmit_sc(kay, participant->txsc);
+	ieee802_1x_kay_deinit_transmit_sc(participant, participant->txsc);
+
+	os_memset(&participant->cak, 0, sizeof(participant->cak));
+	os_memset(&participant->kek, 0, sizeof(participant->kek));
+	os_memset(&participant->ick, 0, sizeof(participant->ick));
+	os_free(participant);
+
+}
+
+/**
+ *  ieee802_1x_kay_delete_mka_hotswap
+ *
+ *  Same as ieee802_1x_kay_delete_mka but it does not delete MACsec transmit channel
+ *
+ */
+void
+ieee802_1x_kay_delete_mka_hotswap(struct ieee802_1x_kay *kay, struct mka_key_name *ckn)
+{
+	struct ieee802_1x_mka_participant *participant;
+
+	if (!kay || !ckn)
+		return;
+
+	/* get the participant */
+    participant = ieee802_1x_kay_get_participant(kay, ckn->name);
+    if (!participant) {
+		wpa_hexdump(MSG_DEBUG, "KaY: participant is not found",
+			    ckn->name, ckn->len);
+		return;
+	}
+
+    ieee802_1x_kay_delete_mka_common(kay, ckn);
+
+    ieee802_1x_kay_deinit_transmit_sc(participant, participant->txsc);
+
+	os_memset(&participant->cak, 0, sizeof(participant->cak));
+	os_memset(&participant->kek, 0, sizeof(participant->kek));
+	os_memset(&participant->ick, 0, sizeof(participant->ick));
+
+    os_free(participant);
+}
+
+void
+ieee802_1x_kay_delete_mka_common(struct ieee802_1x_kay *kay, struct mka_key_name *ckn)
+{
+	struct ieee802_1x_mka_participant *participant;
+	struct ieee802_1x_kay_peer *peer;
+	struct data_key *sak;
+	struct receive_sc *rxsc;
+
+	/* get the participant */
+    participant = ieee802_1x_kay_get_principal_participant(kay);
 	if (!participant) {
 		wpa_hexdump(MSG_DEBUG, "KaY: participant is not found",
 			    ckn->name, ckn->len);
@@ -3375,15 +3434,7 @@ ieee802_1x_kay_delete_mka(struct ieee802_1x_kay *kay, struct mka_key_name *ckn)
 		secy_delete_receive_sc(kay, rxsc);
 		ieee802_1x_kay_deinit_receive_sc(participant, rxsc);
 	}
-	secy_delete_transmit_sc(kay, participant->txsc);
-	ieee802_1x_kay_deinit_transmit_sc(participant, participant->txsc);
-
-	os_memset(&participant->cak, 0, sizeof(participant->cak));
-	os_memset(&participant->kek, 0, sizeof(participant->kek));
-	os_memset(&participant->ick, 0, sizeof(participant->ick));
-	os_free(participant);
 }
-
 
 /**
  * ieee802_1x_kay_mka_participate -
