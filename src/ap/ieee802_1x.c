@@ -71,15 +71,16 @@ static void ieee802_1x_send(struct hostapd_data *hapd, struct sta_info *sta,
 		os_memcpy(xhdr + 1, data, datalen);
 
 #ifdef CONFIG_MACSEC
+    
     /*
      * Check for EAP Request Identity
      *
-     */
     if (data[4] == 0x01) {
         if (hapd->kay!=NULL) {
             ieee802_1x_dealloc_hapd_mka(hapd);
         }
     }
+    */
 
     /* 
      * Check for TLS Handshake and get Server Random

@@ -13,6 +13,8 @@
 
 #include "pae/ieee802_1x_key.h"
 #include "pae/ieee802_1x_kay.h"
+#include "pae/ieee802_1x_kay_i.h"
+#include "pae/ieee802_1x_cp.h"
 
 #include "hostapd.h"
 #include "hapd_kay.h"
@@ -237,29 +239,46 @@ static const struct ieee802_1x_kay_ctx kay_ops = {
 void * ieee802_1x_create_hapd_mka(struct hostapd_data *hapd, u8 *cak, u8 *ckn)
 {
 
-	struct ieee802_1x_kay_ctx *kay_ctx;
+	struct ieee802_1x_kay_ctx *kay_ctx = NULL;
 	struct ieee802_1x_kay *kay = NULL;
+    struct ieee802_1x_mka_participant *participant = NULL;
 	void *res  = NULL;
 
-	struct mka_key *mka_cak;
-	struct mka_key_name *mka_ckn;
+	struct mka_key *mka_cak = NULL;
+	struct mka_key_name *mka_ckn = NULL;
 
-	kay_ctx = os_zalloc(sizeof(*kay_ctx));
+    if (!hapd->kay) {
+        kay_ctx = os_zalloc(sizeof(*kay_ctx));
 
-	os_memcpy(kay_ctx, &kay_ops, sizeof(*kay_ctx));
-	kay_ctx->ctx = hapd;
+	    os_memcpy(kay_ctx, &kay_ops, sizeof(*kay_ctx));
+	    kay_ctx->ctx = hapd;
 
-	kay = ieee802_1x_kay_init(kay_ctx, SHOULD_ENCRYPT, 1,
-		       hapd->conf->iface, hapd->own_addr);
+	    kay = ieee802_1x_kay_init(kay_ctx, SHOULD_ENCRYPT, 1,
+		           hapd->conf->iface, hapd->own_addr);
 	
+	    if(kay == NULL){
+		    wpa_printf(MSG_ERROR, "Could not allocate authenticator KaY");
+		    os_free(kay_ctx);
+		    return NULL;
+	     }	
+	     hapd->kay = kay;
+    }
+    
+    if (hapd->kay) {
+        if (!hapd->macsec_ifname) {
+            ovs_del_port(hapd->ovs_br_name, hapd->macsec_ifname);
+        }
+        
+        ieee802_1x_cp_connect_unauthenticated(hapd->kay->cp);
+        ieee802_1x_cp_sm_step(hapd->kay->cp);
 
-	if(kay == NULL){
-		wpa_printf(MSG_ERROR, "Could not allocate authenticator KaY");
-		os_free(kay_ctx);
-		return NULL;
-	}	
-
-	hapd->kay = kay;
+        while(!dl_list_empty(&hapd->kay->participant_list)) {
+            participant = dl_list_entry(hapd->kay->participant_list.next,
+                                struct ieee802_1x_mka_participant,
+                                list);
+            ieee802_1x_kay_delete_mka_hotswap(hapd->kay, &participant->ckn);
+        }
+    }
 
 	mka_cak = os_zalloc(sizeof(*mka_cak));
 	mka_ckn = os_zalloc(sizeof(*mka_ckn));
@@ -273,7 +292,7 @@ void * ieee802_1x_create_hapd_mka(struct hostapd_data *hapd, u8 *cak, u8 *ckn)
 	res = ieee802_1x_kay_create_mka(kay, mka_ckn, mka_cak, 0, EAP_EXCHANGE, TRUE);
 
 	if(res == NULL) {
-		wpa_printf(MSG_ERROR, "Could not create MKA");
+		wpa_printf(MSG_ERROR, "Could not create MKA session");
 		os_free(kay_ctx);
 		os_free(mka_cak);
 		os_free(mka_ckn);
@@ -281,34 +300,36 @@ void * ieee802_1x_create_hapd_mka(struct hostapd_data *hapd, u8 *cak, u8 *ckn)
 
 		/*
 		 * Find the latest netdevice created (i.e. the one with the highest if_index) 
-		 * and attach it to OvS
+		 * and attach it to OvS.
+         *
+         * FIXME: find a system-wide safe method to do this. 
 		 */
+        if (!hapd->macsec_ifname) {  
+            struct ifaddrs *a, *t;
+            int idx = 0;
+            int curr_idx = 0;
 
-		struct ifaddrs *a, *t;
-		int idx = 0;
-		int curr_idx = 0;
+            /* Return a linked list of all the interfaces present on this machine */
+            getifaddrs(&a);
 
-		
-		/* Return a linked list of all the interfaces present on this machine */
-		getifaddrs(&a);
+            /* Find the max if_index and the relative if_name */
+            for (t=a; t!=NULL; t=t->ifa_next) {
+                curr_idx = if_nametoindex(t->ifa_name);
+                if(curr_idx > idx)
+                    idx = curr_idx;
+            }
 
-		/* Find the max if_index and the relative if_name */
-		for (t=a; t!=NULL; t=t->ifa_next) {
-			curr_idx = if_nametoindex(t->ifa_name);
-			if(curr_idx > idx)
-				idx = curr_idx;
-		}
-
-		/* Assing if_name and if_index to hostapd_data */
-		hapd->macsec_ifname = os_zalloc(IF_NAMESIZE);
-		if_indextoname(idx, hapd->macsec_ifname);
-		hapd->macsec_ifindex = idx;
+            /* Assing if_name and if_index to hostapd_data */
+            hapd->macsec_ifname = os_zalloc(IF_NAMESIZE);
+            if_indextoname(idx, hapd->macsec_ifname);
+            hapd->macsec_ifindex = idx;
+        
+            freeifaddrs(a);
+        }
 
 		/* Create OvS port */
 		wpa_printf(MSG_DEBUG, "Adding %s to OvS...", hapd->macsec_ifname);
 		ovs_add_port(hapd->ovs_br_name, hapd->macsec_ifname);
-
-		freeifaddrs(a);
 	}
 
 	return res;	
