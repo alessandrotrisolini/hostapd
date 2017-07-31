@@ -3394,7 +3394,7 @@ ieee802_1x_kay_delete_mka_common(struct ieee802_1x_kay *kay, struct mka_key_name
 	struct receive_sc *rxsc;
 
 	/* get the participant */
-    participant = ieee802_1x_kay_get_principal_participant(kay);
+    participant = ieee802_1x_kay_get_participant(kay, ckn->name);
 	if (!participant) {
 		wpa_hexdump(MSG_DEBUG, "KaY: participant is not found",
 			    ckn->name, ckn->len);
