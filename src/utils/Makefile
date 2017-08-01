@@ -23,7 +23,8 @@ LIB_OBJS= \
 	uuid.o \
 	wpa_debug.o \
 	wpabuf.o \
-	ovs_utils.o
+	ovs_utils.o \
+	kernel_module_utils.o
 
 # Pick correct OS wrapper implementation
 LIB_OBJS += os_unix.o
