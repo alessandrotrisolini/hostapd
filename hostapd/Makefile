@@ -1030,6 +1030,7 @@ OBJS += ../src/pae/ieee802_1x_kay.o
 OBJS += ../src/pae/ieee802_1x_key.o
 OBJS += ../src/pae/ieee802_1x_secy_ops.o
 OBJS += ../src/utils/ovs_utils.o
+OBJS += ../src/utils/kernel_module_utils.o
 endif
 
 ALL=hostapd hostapd_cli
