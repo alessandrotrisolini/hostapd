@@ -33,6 +33,7 @@
 
 #ifdef CONFIG_MACSEC
 #include "ap/hapd_kay.h"
+#include "utils/kernel_module_utils.h"
 #endif /* CONFIG_MACSEC */
 
 struct hapd_global {
@@ -767,6 +768,12 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif /* CONFIG_DEBUG_LINUX_TRACING */
+
+#ifdef CONFIG_MACSEC
+    if (load_macsec_module() < 0) {
+        return -1;
+    }
+#endif /* CONFIG_MACSEC */
 
 	interfaces.count = argc - optind;
 	if (interfaces.count || num_bss_configs) {
