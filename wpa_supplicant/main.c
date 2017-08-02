@@ -17,6 +17,9 @@
 #include "driver_i.h"
 #include "p2p_supplicant.h"
 
+#ifdef CONFIG_MACSEC
+#include "utils/kernel_module_utils.h"
+#endif /* CONFIG_MACSEC */
 
 static void usage(void)
 {
@@ -342,7 +345,16 @@ int main(int argc, char *argv[])
 	}
 
 	exitcode = 0;
-	global = wpa_supplicant_init(&params);
+
+#ifdef CONFIG_MACSEC
+    if (load_macsec_module() < 0) {
+        wpa_printf(MSG_ERROR, "Failed to load MACsec kernel module");
+        exitcode = -1;
+        goto out;
+    }
+#endif /* CONFIG_MACSEC */
+    
+    global = wpa_supplicant_init(&params);
 	if (global == NULL) {
 		wpa_printf(MSG_ERROR, "Failed to initialize wpa_supplicant");
 		exitcode = -1;
