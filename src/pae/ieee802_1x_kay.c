@@ -515,7 +515,7 @@ ieee802_1x_kay_deinit_receive_sc(
 		ieee802_1x_delete_receive_sa(participant->kay, psa);
 
 	dl_list_del(&psc->list);
-	os_free(psc);
+	//os_free(psc);
 }
 
 
@@ -2297,7 +2297,8 @@ static void ieee802_1x_participant_timer(void *eloop_ctx, void *timeout_ctx)
 	 * when the MKA life elapsed since its creating */
 	if (participant->mka_life) {
 		if (dl_list_empty(&participant->live_peers)) {
-			if (now > participant->mka_life)
+			wpa_printf(MSG_DEBUG, "KaY: Live peer list is empty");
+            if (now > participant->mka_life)
 				goto delete_mka;
 		} else {
 			participant->mka_life = 0;
@@ -2316,9 +2317,10 @@ static void ieee802_1x_participant_timer(void *eloop_ctx, void *timeout_ctx)
 					      &participant->rxsc_list,
 					      struct receive_sc, list) {
 				if (sci_equal(&rxsc->sci, &peer->sci)) {
-					secy_delete_receive_sc(kay, rxsc);
 					ieee802_1x_kay_deinit_receive_sc(
 						participant, rxsc);
+					secy_delete_receive_sc(kay, rxsc);
+                    os_free(rxsc);
 				}
 			}
 			dl_list_del(&peer->list);
@@ -2494,7 +2496,7 @@ ieee802_1x_kay_deinit_transmit_sc(
 	dl_list_for_each_safe(psa, tmp, &psc->sa_list, struct transmit_sa, list)
 		ieee802_1x_delete_transmit_sa(participant->kay, psa);
 
-	os_free(psc);
+	//os_free(psc);
 }
 
 
@@ -3342,10 +3344,12 @@ ieee802_1x_kay_delete_mka(struct ieee802_1x_kay *kay, struct mka_key_name *ckn)
 
     ieee802_1x_kay_delete_mka_common(kay, ckn);
 
-	secy_delete_transmit_sc(kay, participant->txsc);
 	ieee802_1x_kay_deinit_transmit_sc(participant, participant->txsc);
-
-	os_memset(&participant->cak, 0, sizeof(participant->cak));
+	secy_delete_transmit_sc(kay, participant->txsc);
+	
+    os_free(participant->txsc);
+    
+    os_memset(&participant->cak, 0, sizeof(participant->cak));
 	os_memset(&participant->kek, 0, sizeof(participant->kek));
 	os_memset(&participant->ick, 0, sizeof(participant->ick));
 	os_free(participant);
@@ -3377,6 +3381,7 @@ ieee802_1x_kay_delete_mka_hotswap(struct ieee802_1x_kay *kay, struct mka_key_nam
     ieee802_1x_kay_delete_mka_common(kay, ckn);
 
     ieee802_1x_kay_deinit_transmit_sc(participant, participant->txsc);
+    os_free(participant->txsc);
 
 	os_memset(&participant->cak, 0, sizeof(participant->cak));
 	os_memset(&participant->kek, 0, sizeof(participant->kek));
@@ -3431,9 +3436,10 @@ ieee802_1x_kay_delete_mka_common(struct ieee802_1x_kay *kay, struct mka_key_name
 	while (!dl_list_empty(&participant->rxsc_list)) {
 		rxsc = dl_list_entry(participant->rxsc_list.next,
 				     struct receive_sc, list);
-		secy_delete_receive_sc(kay, rxsc);
 		ieee802_1x_kay_deinit_receive_sc(participant, rxsc);
-	}
+		secy_delete_receive_sc(kay, rxsc);
+        os_free(rxsc);
+    }
 }
 
 /**
