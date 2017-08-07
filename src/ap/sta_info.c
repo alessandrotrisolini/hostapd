@@ -641,6 +641,7 @@ struct sta_info * ap_sta_add(struct hostapd_data *hapd, const u8 *addr)
 		return NULL;
 	}
 
+#ifndef CONFIG_MACSEC
 	if (!(hapd->iface->drv_flags & WPA_DRIVER_FLAGS_INACTIVITY_TIMER)) {
 		wpa_printf(MSG_DEBUG, "%s: register ap_handle_timer timeout "
 			   "for " MACSTR " (%d seconds - ap_max_inactivity)",
@@ -649,6 +650,7 @@ struct sta_info * ap_sta_add(struct hostapd_data *hapd, const u8 *addr)
 		eloop_register_timeout(hapd->conf->ap_max_inactivity, 0,
 				       ap_handle_timer, hapd, sta);
 	}
+#endif /* CONFIG_MACSEC */
 
 	/* initialize STA info data */
 	os_memcpy(sta->addr, addr, ETH_ALEN);

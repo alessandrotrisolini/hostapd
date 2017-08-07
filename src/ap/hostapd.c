@@ -2823,6 +2823,9 @@ void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
 
 	/* Start IEEE 802.1X authentication process for new stations */
 	ieee802_1x_new_station(hapd, sta);
+
+    /* Disable 802.11 inactivity timer when MACsec is used */
+#ifndef CONFIG_MACSEC
 	if (reassoc) {
 		if (sta->auth_alg != WLAN_AUTH_FT &&
 		    !(sta->flags & (WLAN_STA_WPS | WLAN_STA_MAYBE_WPS)))
@@ -2840,6 +2843,8 @@ void hostapd_new_assoc_sta(struct hostapd_data *hapd, struct sta_info *sta,
 		eloop_register_timeout(hapd->conf->ap_max_inactivity, 0,
 				       ap_handle_timer, hapd, sta);
 	}
+#endif /* CONFIG_MACSEC */
+
 }
 
 
