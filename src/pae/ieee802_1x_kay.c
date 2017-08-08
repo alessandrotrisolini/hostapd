@@ -3264,12 +3264,13 @@ ieee802_1x_kay_create_mka(struct ieee802_1x_kay *kay, struct mka_key_name *ckn,
 	participant->new_key = NULL;
 	dl_list_init(&participant->rxsc_list);
 	
-    participant->txsc = ieee802_1x_kay_init_transmit_sc(&kay->actor_sci);
-    secy_cp_control_protect_frames(kay, kay->macsec_protect);
-    secy_cp_control_replay(kay, kay->macsec_replay_protect,
-			       kay->macsec_replay_window);
-    secy_create_transmit_sc(kay, participant->txsc);
-
+    if (!participant->txsc) {
+        participant->txsc = ieee802_1x_kay_init_transmit_sc(&kay->actor_sci);
+        secy_cp_control_protect_frames(kay, kay->macsec_protect);
+        secy_cp_control_replay(kay, kay->macsec_replay_protect,
+                       kay->macsec_replay_window);
+        secy_create_transmit_sc(kay, participant->txsc);
+    }
 	/* to derive KEK from CAK and CKN */
 	participant->kek.len = mka_alg_tbl[kay->mka_algindex].kek_len;
 	if (mka_alg_tbl[kay->mka_algindex].kek_trfm(participant->cak.key,
@@ -3381,7 +3382,7 @@ ieee802_1x_kay_delete_mka_hotswap(struct ieee802_1x_kay *kay, struct mka_key_nam
     ieee802_1x_kay_delete_mka_common(kay, ckn);
 
     ieee802_1x_kay_deinit_transmit_sc(participant, participant->txsc);
-    os_free(participant->txsc);
+    //os_free(participant->txsc);
 
 	os_memset(&participant->cak, 0, sizeof(participant->cak));
 	os_memset(&participant->kek, 0, sizeof(participant->kek));

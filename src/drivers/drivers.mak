@@ -62,10 +62,10 @@ ifdef CONFIG_LIBNL32
     PKG_CONFIG ?= pkg-config
     DRV_CFLAGS += $(shell $(PKG_CONFIG) --cflags libnl-3.0)
   endif
-ifdef CONFIG_LIBNL3_ROUTE
-  DRV_LIBS += -lnl-route-3
-  DRV_CFLAGS += -DCONFIG_LIBNL3_ROUTE
-endif
+  ifdef CONFIG_LIBNL3_ROUTE
+    DRV_LIBS += -lnl-route-3
+    DRV_CFLAGS += -DCONFIG_LIBNL3_ROUTE
+  endif
 else
   ifdef CONFIG_LIBNL_TINY
     DRV_LIBS += -lnl-tiny

@@ -246,6 +246,7 @@ NEED_AES_ENCBLOCK=y
 NEED_AES_UNWRAP=y
 NEED_AES_WRAP=y
 NEED_AES_OMAC1=y
+CONFIG_L2_PACKET=y
 OBJS += ../src/ap/hapd_kay.o
 OBJS += ../src/pae/ieee802_1x_cp.o
 OBJS += ../src/pae/ieee802_1x_kay.o
