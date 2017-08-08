@@ -59,7 +59,7 @@ CONFIG_PEERKEY=y
 CONFIG_IEEE80211W=y
 
 # Integrated EAP server
-CONFIG_EAP=y
+CONFIG_EAP=n
 
 # EAP Re-authentication Protocol (ERP) in integrated EAP server
 CONFIG_ERP=y

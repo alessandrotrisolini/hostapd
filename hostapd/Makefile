@@ -86,7 +86,6 @@ OBJS += ../src/ap/beacon.o
 OBJS += ../src/ap/bss_load.o
 OBJS += ../src/ap/neighbor_db.o
 OBJS += ../src/ap/rrm.o
-OBJS += ../src/ap/hapd_kay.o
 
 OBJS_c = hostapd_cli.o ../src/common/wpa_ctrl.o ../src/utils/os_$(CONFIG_OS).o
 
@@ -241,6 +240,21 @@ ifndef CONFIG_NO_CTRL_IFACE
 CFLAGS += -DCONFIG_CTRL_IFACE
 endif
 
+ifdef CONFIG_MACSEC
+CFLAGS += -DCONFIG_MACSEC
+NEED_AES_ENCBLOCK=y
+NEED_AES_UNWRAP=y
+NEED_AES_WRAP=y
+NEED_AES_OMAC1=y
+OBJS += ../src/ap/hapd_kay.o
+OBJS += ../src/pae/ieee802_1x_cp.o
+OBJS += ../src/pae/ieee802_1x_kay.o
+OBJS += ../src/pae/ieee802_1x_key.o
+OBJS += ../src/pae/ieee802_1x_secy_ops.o
+OBJS += ../src/utils/ovs_utils.o
+OBJS += ../src/utils/kernel_module_utils.o
+endif
+
 ifdef CONFIG_IAPP
 CFLAGS += -DCONFIG_IAPP
 OBJS += ../src/ap/iapp.o
@@ -337,7 +351,6 @@ endif
 else
 OBJS += ../src/l2_packet/l2_packet_none.o
 endif
-
 
 ifdef CONFIG_ERP
 CFLAGS += -DCONFIG_ERP
@@ -1017,20 +1030,6 @@ endif
 ifndef CONFIG_NO_CTRL_IFACE
 OBJS += ../src/fst/fst_ctrl_iface.o
 endif
-endif
-
-ifdef CONFIG_MACSEC
-CFLAGS += -DCONFIG_MACSEC
-NEED_AES_ENCBLOCK=y
-NEED_AES_UNWRAP=y
-NEED_AES_WRAP=y
-NEED_AES_OMAC1=y
-OBJS += ../src/pae/ieee802_1x_cp.o
-OBJS += ../src/pae/ieee802_1x_kay.o
-OBJS += ../src/pae/ieee802_1x_key.o
-OBJS += ../src/pae/ieee802_1x_secy_ops.o
-OBJS += ../src/utils/ovs_utils.o
-OBJS += ../src/utils/kernel_module_utils.o
 endif
 
 ALL=hostapd hostapd_cli
