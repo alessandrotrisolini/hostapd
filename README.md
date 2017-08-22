@@ -1,11 +1,18 @@
 # `hostapd` and `wpa_supplicant`
-This custom version of `hostapd` and `wpa_suppliant` introduces the automatic establishment of *MACsec channels* between a supplicant and an authenticator.
+This custom version of `hostapd` and `wpa_supplicant` introduces the automatic establishment of *MACsec channels* between a supplicant and an authenticator.
 
-After a successful 802.1X EAP-TLS authentication, the authenticator, which is also the Key Server, initiates a Key Agreement session in order to distribute the Security Association Key (SAK) that will be used to authenticate all the frames exchanged between itself and the supplicant.
+The overall process is integrated within a 802.1X EAP-TLS authentication:
+* derivation of the Connectivity Association Key (CAK) from the EAP Master Session Key (EAP-MSK);
+* creation of the MACsec Key Agreement (MKA) session;
+* distribution of the Secure Association Key (SAK) from the authenticator (Key Server) to the supplicant.
 
-The `hostapd` daemon is intended to manage an [Open vSwitch](http://openvswitch.org/) by the addition/deletion of pysical ports to it. This enables to use a commodity machine -- with multiple NICs -- as a MACsec-capable switch.
+<p align="center">
+   <img src="images/macsec-authn.png" />
+</p>
 
-## Script installation
+The `hostapd` daemon can also be used to manage an [Open vSwitch](http://openvswitch.org/), providing methods to automatically add/delete physical ports to/from it. This enables to use a commodity machine -- with multiple NICs -- as a MACsec-capable switch.
+
+## Installation scripts
 Two scripts are available as building tool for both `hostapd` and `wpa_supplicant`. They install all the needed dependencies and provide an interactive prompt to install them. **Beware**: they are supposed to work only on Debian/Ubuntu with Linux kernel version >= 4.8. 
 
 If you are using Ubuntu and want to update your kernel you have to:
