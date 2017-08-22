@@ -77,7 +77,7 @@ $ sudo cp wpa_supplicant /usr/local/bin/wpa_supplicant
 `hostapd` has to be launched on a machine that represents the access point to a network -- in our specific case, it is a switch. `hostapd` must be able to reach a RADIUS server, in order to authenticate the supplicant and create the MACsec channel by using the cryptographic material derived from the authentication. 
 
 #### Configure `hostapd`:
-`hostapd` configuration is straightforward: it needs only a configuration file with key-value pairs. A commented example can be found in the *hostapd* folder of this repository.
+`hostapd` configuration is straightforward: it needs only a configuration file with key-value pairs. A commented example can be found [here](hostapd/hostapd_macsec.conf).
 
 #### Launch `hostapd`:
 `hostapd` can be launched by passing as parameters a configuration file and the name of the Open vSwitch that has to be managed: 
@@ -91,7 +91,7 @@ Note that `hostapd` needs a running instance of [FreeRADIUS server](https://gith
 `wpa_supplicant` has to be launched on a node that represents an entity that wants to join a network (i.e. supplicant). 
 
 #### Configure `wpa_supplicant`:
-Configuring `wpa_supplicant` is similar to configure `hostapd`: a configuration file is needed and an example can be found in the *wpa_supplicant* folder of this repository.
+Configuring `wpa_supplicant` is similar to configure `hostapd`: a configuration file is needed and an example can be found [here](wpa_supplicant/wpa_supplicant_macsec.conf).
 
 #### Launch `wpa_supplicant`:
 Even `wpa_supplicant` requires that the MACsec kernel module has been loaded.
