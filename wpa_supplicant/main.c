@@ -345,15 +345,7 @@ int main(int argc, char *argv[])
 	}
 
 	exitcode = 0;
-
-#ifdef CONFIG_MACSEC
-    if (load_macsec_module() < 0) {
-        wpa_printf(MSG_ERROR, "Failed to load MACsec kernel module");
-        exitcode = -1;
-        goto out;
-    }
-#endif /* CONFIG_MACSEC */
-    
+   
     global = wpa_supplicant_init(&params);
 	if (global == NULL) {
 		wpa_printf(MSG_ERROR, "Failed to initialize wpa_supplicant");
@@ -398,6 +390,14 @@ int main(int argc, char *argv[])
 		}
 	}
 
+#ifdef CONFIG_MACSEC
+    if (load_macsec_module() < 0) {
+        wpa_printf(MSG_ERROR, "Failed to load MACsec kernel module");
+        exitcode = -1;
+        goto out;
+    }
+#endif /* CONFIG_MACSEC */
+ 
 #ifdef CONFIG_MATCH_IFACE
 	if (exitcode == 0)
 		exitcode = wpa_supplicant_init_match(global);
