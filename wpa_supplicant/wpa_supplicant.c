@@ -3270,25 +3270,6 @@ void wpa_supplicant_rx_eapol(void *ctx, const u8 *src_addr,
 	wpa_dbg(wpa_s, MSG_DEBUG, "RX EAPOL from " MACSTR, MAC2STR(src_addr));
 	wpa_hexdump(MSG_MSGDUMP, "RX EAPOL", buf, len);
 
-#ifdef CONFIG_MACSEC
-    /*
-     * If MACsec is enabled, KaY has to be instantiated every time
-     * an EAP Identity Request is received
-     */
-/*
-    if (wpa_s->key_mgmt != WPA_KEY_MGMT_NONE) {
-        if (buf[4]==0x01 && buf[8]==0x01) {
-            struct wpa_ssid* ssid = wpa_s->current_ssid;
-            wpa_msg(wpa_s, MSG_ERROR, "IEEE 802.1X KaY RESET");
-            if(wpa_s->kay!=NULL)
-                ieee802_1x_dealloc_kay_sm(wpa_s);
-            ieee802_1x_alloc_kay_sm(wpa_s, ssid);
-        }
-    }
-*/
-#endif /* CONFIG_MACSEC */
-
-
 #ifdef CONFIG_PEERKEY
 	if (wpa_s->wpa_state > WPA_ASSOCIATED && wpa_s->current_ssid &&
 	    wpa_s->current_ssid->peerkey &&
