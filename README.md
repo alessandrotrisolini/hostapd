@@ -13,7 +13,7 @@ The overall process is integrated within a 802.1X EAP-TLS authentication:
 The `hostapd` daemon can also be used to manage an [Open vSwitch](http://openvswitch.org/), providing methods to automatically add/delete physical ports to/from it. This enables to use a commodity machine -- with multiple NICs -- as a MACsec-capable switch.
 
 ## Installation scripts
-Two scripts are available as building tool for both `hostapd` and `wpa_supplicant`. They install all the needed dependencies and provide an interactive prompt to install them. **Beware**: they are supposed to work only on Debian/Ubuntu with Linux kernel version >= 4.8. 
+Two scripts are available as building tool for both `hostapd` and `wpa_supplicant`. They check all the needed dependencies and provide an interactive prompt to install them. **Beware**: they are supposed to work only on Debian/Ubuntu with Linux kernel version >= 4.8. 
 
 If you are using Ubuntu and want to update your kernel you have to:
 * download the `*.deb` files from the official [Kernel PPA of Ubuntu](http://kernel.ubuntu.com/~kernel-ppa/mainline/);
@@ -85,7 +85,7 @@ $ sudo cp wpa_supplicant /usr/local/bin/wpa_supplicant
 $ sudo hostapd /path/to/config/file -z $ovs-bridge-name
 ```
 
-Note that `hostapd` needs a running instance of [FreeRADIUS server](https://github.com/FreeRADIUS/freeradius-server) and to take advantage of the automatic generation of MACsec channels, EAP-TLS method **must** be used. FreeRADIUS also acts as DHCP server and provides some tools for the management of a Certification Authority. A guide for the installation of FreeRADIUS is available [here](https://github.com/FreeRADIUS/freeradius-server/blob/v4.0.x/INSTALL.md) or you can use the `install-freeradius.sh` available in this repository.
+Note that `hostapd` needs a running instance of [FreeRADIUS server](https://github.com/FreeRADIUS/freeradius-server) and to take advantage of the automatic generation of MACsec channels, EAP-TLS method **must** be used. FreeRADIUS also acts as DHCP server and provides some tools for the management of a Certification Authority. A guide for the installation of FreeRADIUS is available [here](https://github.com/FreeRADIUS/freeradius-server/blob/v4.0.x/INSTALL.md) or you can use the `install-freeradius.sh` script available in this repository.
 
 ### `wpa_supplicant`
 `wpa_supplicant` has to be launched on a node that represents an entity that wants to join a network (i.e. supplicant). 
@@ -96,7 +96,7 @@ Configuring `wpa_supplicant` is similar to configure `hostapd`: a configuration 
 #### Launch `wpa_supplicant`:
 Even `wpa_supplicant` requires that the MACsec kernel module has been loaded.
 
-Now `wpa_supplicant` can be launched by passing as paramenters the driver to be used (-D), the network interface where it has to listen (-i), and the configuration file (-c).
+Now `wpa_supplicant` can be launched by passing as parameters the driver to be used (-D), the network interface where it has to listen (-i), and the configuration file (-c).
 ```bash
 $ sudo wpa_supplicant -D macsec_linux -i interface_name -c /path/to/config/file
 ```
